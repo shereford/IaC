@@ -1,0 +1,44 @@
+# Create AWS CloudWatch Metric alarms
+
+# Refer to https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_metric_alarm
+
+# Define the resources to monitor
+resource "aws_cloudwatch_metric_alarm" "example_alarm" {
+  alarm_name          = "example_alarm"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "300"
+  statistic           = "Average"
+  threshold           = "70"
+  alarm_description   = "This metric monitors CPU utilization"
+  alarm_actions       = ["arn:aws:sns:us-east-1:123456789012:example-topic"]
+  ok_actions          = ["arn:aws:sns:us-east-1:123456789012:example-topic"]
+}
+
+# Define the SNS topic to notify when the alarm triggers
+resource "aws_sns_topic" "example_topic" {
+  name = "example-topic"
+}
+
+# Grant the CloudWatch Alarm permission to publish to the SNS topic
+resource "aws_sns_topic_policy" "example_topic_policy" {
+  arn = aws_sns_topic.example_topic.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudwatch.amazonaws.com"
+        }
+        Action = [
+          "sns:Publish"
+        ]
+        Resource = aws_sns_topic.example_topic.arn
+      }
+    ]
+  })
+}
