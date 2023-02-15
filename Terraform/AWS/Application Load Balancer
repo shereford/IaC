@@ -1,0 +1,54 @@
+# Reference: https://registry.terraform.io/providers/hashicorp/aws/latest/docs
+
+# This load balancer is set to target specific instances when creating the target group
+
+#Define Variables
+variable "alb_name" {
+  default = "web-app-alb"
+}
+
+variable "target_group_name" {
+  default = "web-app-tg"
+}
+
+variable "instance_ids" {
+  default = ["i-REDACTED", "i-REDACTED"]
+}
+
+#Create Target Group
+resource "aws_lb_target_group" "app_tg" {
+  name        = var.target_group_name
+  port        = 443
+  protocol    = "HTTPS"
+  vpc_id      = "vpc-REDACTED"
+  target_type = "instance"
+}
+
+#Register Target Instances
+resource "aws_lb_target_group_attachment" "app_tg_attachment" {
+  target_group_arn = aws_lb_target_group.app_tg.arn
+  target_id        = var.instance_ids
+}
+
+#Create ALB
+resource "aws_lb" "app_alb" {
+  name               = var.alb_name
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = ["sg-REDACTED"] 
+  subnets            = ["subnet-REDACTED", "subnet-REDACTED"]
+}
+
+#Create ALB Listener
+resource "aws_lb_listener" "app_alb_listener" {
+  load_balancer_arn = aws_lb.app_alb.arn
+  port              = "443"
+  protocol          = "HTTPS"
+ ssl_policy        = "ELBSecurityPolicy-2016-08"
+certificate_arn    = "arn:aws:acm:us-east-1:REDACTED"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_tg.arn
+  }
+}
