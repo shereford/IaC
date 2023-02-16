@@ -1,0 +1,53 @@
+#Carbon Black API credentials
+cb_url = "https://carbonblack.example.com"
+cb_token = "abc123456789"
+
+#AWS credentials
+aws_access_key = "123456789"
+aws_secret_key = "123456789"
+aws_region = "<region>"
+
+#Carbon Black API headers
+headers = {
+    "Authorization": "Token " + cb_token,
+    "Content-Type": "application/json",
+}
+
+#Create boto3 client for EC2
+ec2 = boto3.client(
+    "ec2",
+    aws_access_key_id=aws_access_key,
+    aws_secret_access_key=aws_secret_key,
+    region_name=aws_region,
+)
+
+#Get the list of EC2 instances with the tag "decommission"
+instances = ec2.describe_instances(
+    Filters=[
+        {
+            "Name": "tag:decommission",
+            "Values": ["yes"],
+        },
+    ],
+)
+
+#Loop through instances
+for reservation in instances["Reservations"]:
+    for instance in reservation["Instances"]:
+        instance_id = instance["InstanceId"]
+
+        #Check if the instance is being monitored by Carbon Black
+        endpoint = f"{cb_url}/api/v1/endpoint"
+        endpoint_params = {"q": f"aws_instance_id:{instance_id}"}
+        response = requests.get(endpoint, headers=headers, params=endpoint_params)
+        if response.status_code == 200:
+            endpoint_data = response.json()
+
+            #Deregister the instance from Carbon Black if it is being monitored
+            if endpoint_data["total_results"] > 0:
+                endpoint_id = endpoint_data["results"][0]["id"]
+                endpoint_deregister_url = f"{cb_url}/api/v1/endpoint/{endpoint_id}/deregister"
+                requests.post(endpoint_deregister_url, headers=headers)
+
+#Deregister the instances from AWS
+ec2.terminate_instances(InstanceIds=[instance_id for reservation in instances["Reservations"] for instance in reservation["Instances"]])
