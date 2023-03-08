@@ -92,7 +92,7 @@ resource "aws_cloudwatch_metric_alarm" "system_status_alarm" {
 # DB instance composite alarms
 resource "aws_cloudwatch_composite_alarm" "db_composite_alarm" {
   count             = length(local.db)
-  alarm_name        = "DEMO ${local.db[count.index].tags.Name} Test Composite"
+  alarm_name        = "DEMO ${local.db[count.index].tags.Name} Composite"
   alarm_description = "Alarm for CPU,Disk,Status Checks, and SQL for DB Instancesr"
  
   alarm_rule = join(" OR " , tolist(["ALARM(\"system-status-alarm-${local.db[count.index].tags.Name}\")", 
@@ -106,7 +106,7 @@ resource "aws_cloudwatch_composite_alarm" "db_composite_alarm" {
 # Web instance composite alarms
 resource "aws_cloudwatch_composite_alarm" "web_composite_alarm" {
   count             = length(local.web)
-  alarm_name        = "DEMO ${local.web[count.index].tags.Name} Test Composite"
+  alarm_name        = "DEMO ${local.web[count.index].tags.Name} Composite"
   alarm_description = "Alarm for CPU,Disk,Status Checks, and URI for Web Instances"
  
   alarm_rule = join(" OR " , tolist(["ALARM(\"system-status-alarm-${local.web[count.index].tags.Name}\")", 
@@ -119,7 +119,7 @@ resource "aws_cloudwatch_composite_alarm" "web_composite_alarm" {
 # App instance composite alarms
 resource "aws_cloudwatch_composite_alarm" "app_composite_alarm" {
   count             = length(local.app)
-  alarm_name        = "DEMO ${local.app[count.index].tags.Name} Test Composite"
+  alarm_name        = "DEMO ${local.app[count.index].tags.Name} Composite"
   alarm_description = "Alarm for CPU,Disk,Status Checks, and URI for App Instances"
  
   alarm_rule = join(" OR " , tolist(["ALARM(\"system-status-alarm-${local.app[count.index].tags.Name}\")", 
@@ -141,3 +141,4 @@ resource "aws_cloudwatch_composite_alarm" "environment_alarm" {
                                      "ALARM(\"${aws_cloudwatch_composite_alarm.web_composite_alarm[0].alarm_name}\")",
                                      "ALARM(\"${aws_cloudwatch_composite_alarm.web_composite_alarm[1].alarm_name}\")"]))
 }
+
