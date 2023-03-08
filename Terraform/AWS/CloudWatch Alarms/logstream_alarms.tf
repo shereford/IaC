@@ -1,3 +1,4 @@
+
 # Below code block declared in alarms.tf (if alarms.tf file is moved to another module uncomment codeblock)
 # Define the list of instances to monitor
 #locals {
@@ -34,7 +35,7 @@ resource "aws_cloudwatch_log_metric_filter" "metric_filter_uri_monitoring" {
   log_group_name = "${local.web_and_app_instances[count.index].tags.Name}"
 
   metric_transformation {
-    name      = "URIMonitoring"
+    name      = "URI Monitoring"
     namespace = "${local.web_and_app_instances[count.index].tags.Name}-URI-Monitoring"
     value     = "1"
     default_value    = "0"
@@ -85,7 +86,7 @@ resource "aws_cloudwatch_log_metric_filter" "metric_filter_cluster_failover" {
   log_group_name = "${local.db[count.index].tags.Name}"
 
   metric_transformation {
-    name      = " ClusterFailover"
+    name      = "Cluster Failover"
     namespace = "${local.db[count.index].tags.Name}-ClusterFailover"
     value     = "1"
     default_value    = "0"
@@ -104,11 +105,11 @@ resource "aws_cloudwatch_metric_alarm" "service_alarm" {
   period              = "300"
   statistic           = "Sum"
   threshold           = "1"
-  namespace           = "${aws_cloudwatch_log_metric_filter.metric_filter_service_alarm[count.index].name}"
+  namespace           = "${local.all_instances[count.index].tags.Name}-Service-Alarm"
   alarm_description   = "Service Alarm based on Metric Filters"
-  dimensions = {
+  /*dimensions = {
     InstanceId = "${aws_cloudwatch_log_metric_filter.metric_filter_service_alarm[count.index].log_group_name}"
-  }
+  }*/
   tags = {
     Name = "${aws_cloudwatch_log_metric_filter.metric_filter_service_alarm[count.index].name}"
   }
@@ -123,11 +124,11 @@ resource "aws_cloudwatch_metric_alarm" "uri_monitoring_alarm" {
   period              = "300"
   statistic           = "Sum"
   threshold           = "1"
-  namespace           = "${aws_cloudwatch_log_metric_filter.metric_filter_uri_monitoring[count.index].name}"
+  namespace           = "${local.web_and_app_instances[count.index].tags.Name}-URI-Monitoring"
   alarm_description   = "URI Monitoring based on Metric Filters"
-  dimensions = {
+  /*dimensions = {
     InstanceId = "${aws_cloudwatch_log_metric_filter.metric_filter_uri_monitoring[count.index].log_group_name}"
-  }
+  }*/
   tags = {
     Name = "${aws_cloudwatch_log_metric_filter.metric_filter_uri_monitoring[count.index].name}"
   }
@@ -138,15 +139,15 @@ resource "aws_cloudwatch_metric_alarm" "db_failover_disk_alarm" {
   alarm_name          = "${local.db[count.index].tags.Name}-Disk-Error"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "Failover Disk Error"
+  metric_name         = "DB Disk Failover"
   period              = "300"
   statistic           = "Sum"
   threshold           = "1"
-  namespace           = "${local.db[count.index].tags.Name}"
+  namespace           = "${local.db[count.index].tags.Name}-Disk-Error"
   alarm_description   = "DB Failover Disk Error"
-  dimensions = {
+  /*dimensions = {
     InstanceId = "${aws_cloudwatch_log_metric_filter.metric_filter_db_failover_disk[count.index].log_group_name}"
-  }
+  }*/
   tags = {
     Name = "${aws_cloudwatch_log_metric_filter.metric_filter_db_failover_disk[count.index].name}"
   }
@@ -156,15 +157,15 @@ resource "aws_cloudwatch_metric_alarm" "db_failover_sql_stopped_alarm" {
   alarm_name          = "${local.db[count.index].tags.Name}-SQL-Service-Stopped"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "Failover Service Stopped"
+  metric_name         = "SQL Server Stopped"
   period              = "300"
   statistic           = "Sum"
   threshold           = "1"
-  namespace           = "${local.db[count.index].tags.Name}"
+  namespace           = "${local.db[count.index].tags.Name}-SQL-Stopped"
   alarm_description   = "SQL Stopped"
-  dimensions = {
+  /*(dimensions = {
     InstanceId = "${aws_cloudwatch_log_metric_filter.metric_filter_db_failover_sql_stopped[count.index].log_group_name}"
-  }
+  }*/
   tags = {
     Name = "${aws_cloudwatch_log_metric_filter.metric_filter_db_failover_sql_stopped[count.index].name}"
   }
@@ -179,11 +180,11 @@ resource "aws_cloudwatch_metric_alarm" "cluster_failover_alarm" {
   period              = "300"
   statistic           = "Sum"
   threshold           = "1"
-  namespace           = "${local.db[count.index].tags.Name}"
+  namespace           = "${local.db[count.index].tags.Name}-ClusterFailover"
   alarm_description   = "Cluster Failover"
-  dimensions = {
+  /*dimensions = {
     InstanceId = "${aws_cloudwatch_log_metric_filter.metric_filter_cluster_failover[count.index].log_group_name}"
-  }
+  }*/
   tags = {
     Name = "${aws_cloudwatch_log_metric_filter.metric_filter_cluster_failover[count.index].name}"
   }
