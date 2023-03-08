@@ -1,1 +1,1 @@
-# IaC code for reference/use as templates for future projects
+IaC code from projects
